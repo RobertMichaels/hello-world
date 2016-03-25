@@ -1,0 +1,79 @@
+//This program performs probability calculations for a variety of distributions
+
+var factorial = function(number){
+    if(number<0){
+        return "undefined";
+    }else if(number==0){
+        return 1;
+    }else{
+        return temp = number*factorial(number-1);
+    }
+}
+
+var combination = function(n,k){
+    return factorial(n)/factorial(k)/factorial(n-k);
+}
+
+//binomial is the probability of x successes in n fixed trials with p being the probability of success for each trial
+var binomial = function(p,n,x){
+    return combination(n,x)*Math.pow(p, x)*Math.pow((1-p), (n-x));
+}
+
+//poisson is the probability of x successes in a given time assuming an average of lambda successes in the same time period (ie, a salesman sells 2 cars in a week on average, what is the chance he sells three in a week?)
+var poisson = function(lambda,x){
+    return Math.exp(-lambda)*Math.pow(lambda, x)/factorial(x);
+}
+
+//geometric is the probability of reaching your first success on the xth trial with p being the probability of success for each trial
+var geometric = function(p,x){
+    return Math.pow(1-p,x-1)*p;
+}
+
+//negative_binomial is the probability of having k successes through x trials with p being the probability of success for each trial
+var negative_binomial = function(p,x,k){
+    return combination(x-1,k-1)*Math.pow(1-p,x-k)*Math.pow(p,k);
+}
+
+//hypergeometric is the probability if having x observed successes after n draws from a population of N with M successes existing in the population.  These draws are performed without replacement (ie, a deck of cards).
+var hypergeometric = function(M,x,N,n){
+    return combination(M,x)*combination(N-M,n-x)/combination(N,n);
+}
+
+do{
+var probability = prompt("Choose the type of probability to calculate. 1) Binomial, 2) Poisson, 3) Geometric, 4) Negative Binomial, 5) Hypergeometric.");
+var probCalced = true;
+switch(probability){
+    case '1':
+        var p = prompt("Enter the probability of success for each trial.");
+        var n = prompt("Enter the number of trials.");
+        var x = prompt("Enter the number of successes.");
+        console.log("The probability of " + x + " successes in " + n + " trials given an individual trial success probability of " + p + " is " + binomial(p,n,x) + ".");
+        break;
+    case '2':
+        var lambda = prompt("Enter the mean number of successes.");
+        var x = prompt("Enter the desired number of successes.");
+        console.log("The probability of " + x + " number of successes for the given period, when the expected number of successes in that period is " + lambda + " is " + poisson(lambda,x) + ".");
+        break;
+    case '3':
+        var p = prompt("Enter the probability of success for each trial.");
+        var x = prompt("Enter the trial on which you want to reach the first success.");
+        console.log("The probability of reaching your first success on the " + x + "th trial given an individual trial success probability of " + p + " is " + geometric(p,x) + ".");
+        break;
+    case '4':
+        var p = prompt("Enter the probability of success for each trial.");
+        var x = prompt("Enter the number of trials.");
+        var k = prompt("Enter the number of successes.");
+        console.log("The probability of achieving " + k + " successes in " + x + " trials given an individual trial success probability of " + p + " is " + negative_binomial(p,x,k) + ".");
+        break;
+    case '5':
+        var M = prompt("Enter the number of successes in the population.");
+        var x = prompt("Enter the number of observed successes.");
+        var N = prompt("Enter the population size.");
+        var n = prompt("Enter the number of draws.");
+        console.log("The probability of observing " + x + " successes after " + n + " draws from a population of " + N + " given " + M + " successes exist in the population is " + hypergeometric(M,x,N,n) + ".");
+        break;
+    default:
+        probCalced = false;
+        console.log("Please choose a valid option.");
+}
+}while(probCalced == false)
