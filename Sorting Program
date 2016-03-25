@@ -1,0 +1,25 @@
+//This is a short program built to sort an array in ascending order
+
+var a = [7, 2, 38, 19, 6, 5, 18, 1, 11, 40, 17, 9, 6, 13];
+var sorted = false;
+
+while(sorted == false){
+for(i=0;i<a.length-1;i++){
+    if(a[i]>a[i+1]){
+        var large = a[i];
+        var small = a[i+1];
+    }else{
+        var large = a[i+1];
+        var small = a[i];
+    }
+    a[i]=small;
+    a[i+1]=large;
+}
+console.log(a);
+sorted = true;
+    for(i=0;i<a.length-1;i++){
+    if(a[i]>a[i+1]){
+        sorted = false;
+    }
+}
+}
