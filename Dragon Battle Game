@@ -1,0 +1,643 @@
+console.log("Oh no, a dragon!");
+confirm("Your party encounters a dragon.  Get ready to fight!");
+
+function Unit(){
+    this.turn = false;
+    this.flank = false;
+    this.fly = false;
+    this.rendStatus = 0;
+}
+
+Unit.prototype.attack = function(target){
+    if(target.currentHP<=0){
+        // this conditional ensures nothing happens if one attempts to attack a dead target
+    }else if(this.flank==true&&target.fly==false){
+        var damage = Math.floor((Math.random()*2+5)*this.strength*1.2);
+        console.log("The " + this.name + " deals " + damage + " damage to the " + target.name +"!");
+        target.currentHP -= damage;
+        this.turn = false;
+        if(target.flank==true){
+            target.flank=false;
+        } //closes if
+    }else if(this.flank==false&&target.fly==false){
+        var damage = Math.floor(Math.random()*2+5)*this.strength;
+        console.log("The " + this.name + " deals " + damage + " damage to the " + target.name +"!");
+        target.currentHP -= damage;
+        this.turn = false;
+        if(target.flank==true){
+            target.flank=false;
+        } //closes if
+    }else if(target.fly==true){
+        console.log("The " + target.name + " is out of range.");
+        this.turn = false;
+    } //closes if-else-if-else
+} //closes attack method
+
+var numFlankers = 0;
+var numFrontal = 0;
+var numLivingAllies = 0;
+var numFearful = 0;
+var shoutUsed = false;
+
+function Enemy(name, strength, magic, save, baseHP){
+    this.name = name;
+    this.strength = strength;
+    this.magic = magic;
+    this.save = save;
+    this.baseHP = baseHP;
+    this.currentHP = baseHP;
+    this.fly=false;
+} //closes Enemy class
+
+
+function Ally(name, strength, magic, baseHP, baseSC, save, type){
+    this.name = name;
+    this.strength = strength;
+    this.magic = magic;
+    this.baseHP = baseHP;
+    this.currentHP = baseHP;
+    this.baseSC = baseSC;
+    this.spellCount = baseSC;
+    this.save = save;
+    this.type = type;
+    this.tauntStatus = 0;
+    this.fearStatus = 0;
+    this.heal = function(target){
+        if(target.currentHP<=0){
+            console.log("The " + target.name + " is already dead!");
+        }else{
+            switch(this.type){
+                case 'healer':
+                var healDmg = Math.floor((Math.random()*4+9)*1.7)*this.magic;
+                break;
+                default:
+                var healDmg = Math.floor(Math.random()*4+9)*this.magic;
+            } //closes switch
+        var tempHP = healDmg + target.currentHP;
+        console.log("Your " + this.name + " heals " + healDmg + " damage on the " + target.name + "!");
+            if(target.baseHP>=tempHP){
+                target.currentHP = tempHP;
+            }else{
+                target.currentHP = target.baseHP;
+            }
+        this.spellCount -= 1;
+        this.turn = false;
+        } // closes if-else
+    }//closes heal method
+    this.ice = function(target){
+        if(this.spellCount>=1){
+            switch(this.type){
+                case 'speller':
+                var damage = Math.floor((Math.random()*5+10)*1.5)*this.magic;
+                break;
+                default:
+                var damage = Math.floor(Math.random()*5+10)*this.magic;
+            } //closes switch
+        console.log("Your " + this.name + " deals " + damage + " ice damage to the " + target.name +"!");
+        target.currentHP -= damage;
+        this.spellCount -= 1;
+        this.turn = false;
+        }else{
+            console.log(this.name + " is out of spells.");
+        }
+    } //closes ice method
+    this.sneakAttack = function(target){
+        if(this.flank==true&&this.spellCount>=1){
+            switch(this.type){
+                case 'meleer':
+                var damage = Math.floor((Math.random()*2+5)*this.strength*4);
+                break;
+                default:
+                var damage = Math.floor((Math.random()*2+5)*this.strength*2.5);
+            } //closes switch
+            console.log("Your " + this.name + " sneak attacks for " + damage + " damage!");
+            target.currentHP -= damage;
+            this.spellCount -= 1;
+            this.turn = false;
+        }else if(this.flank==false&&this.spellCount>=1){
+            console.log("Your " + this.name + " must be flanking to sneak attack.");
+        }else{
+            console.log("Your " + this.name + " is out of spells.");
+        }
+    } //closes sneakAttack method
+    this.rez= function(target){
+        switch(this.type){
+            case 'healer':
+                target.currentHP = Math.floor(1/2*target.baseHP);
+                break;
+            default:
+                target.currentHP = 1;
+        } //closes switch
+        console.log("The " + target.name + " is resurrected with " + target.currentHP + " HP.");
+        target.flank = false;
+        this.spellCount -= 1;
+        this.turn = false;
+    } //closes rez method
+    this.taunt = function(target){
+        var checkSave = Math.random();
+        switch(this.type){
+            case 'tanker':
+                if(checkSave>target.save){
+                this.tauntStatus = 2;
+                } //closes if which checks save
+                break;
+            case 'speller':
+                if(checkSave>2*target.save){
+                    this.tauntStatus = 1;
+                } //closes if which penalizes speller taunting
+                break;
+            default:
+            if(checkSave>target.save){
+                this.tauntStatus = 1;
+            };
+        } //closes switch
+        if(this.tauntStatus>0){
+        console.log("The " + target.name + " is enraged by your " + this.name + " for " + this.tauntStatus + " turn(s).");
+        }else{
+            console.log("The " + target.name + " RESISTS your " + this.name + "'s taunt.");
+        } //closes if-else for saveCheck
+        this.spellCount -= 1;
+        this.turn = false;
+    } //closes taunt method
+} //closes Ally class
+
+Enemy.prototype = new Unit();
+Ally.prototype = new Unit();
+
+var dragonCreated = false;
+while(dragonCreated==false){
+var difficulty = prompt("Choose a difficulty: 1) easy, 2) normal, or 3) hard. (Type the number next to the option.)");
+switch(difficulty){
+    case '1':
+        var dragon = new Enemy("Young Dragon", 8, 6, 0, 1500);
+        dragonCreated = true;
+        break;
+    case '2':
+        var dragon = new Enemy("Dragon", 10, 8, 0.2, 2300);
+        dragonCreated = true;
+        break;
+    case '3':
+        var dragon = new Enemy("Elder Dragon", 12, 10, 0.25, 2800);
+        dragonCreated = true;
+        break;
+    case '4':
+        var dragon = new Enemy("Ancient Dragon", 14, 12, 0.3, 3400);
+        confirm("You chose the secret difficulty option.  Good luck...");
+        dragonCreated = true;
+        break;
+    case 'secret':
+        var dragon = new Enemy("Ancientest Dragon", 15, 13, 0.35, 3600);
+        confirm("You chose the secretest difficulty option.  What have you done?");
+        dragonCreated = true; 
+    default:
+        console.log("Please choose a valid option.");
+} //closes switch
+} //closes while loop for dragon creation
+
+var knight = new Ally("Knight", 7, 2, 250, 3, 0.20, "tanker");
+var cleric = new Ally("Cleric", 5, 8, 210, 5, 0.30, "healer");
+var mage = new Ally("Mage", 3, 10, 150, 6, 0.25, "speller");
+var rogue = new Ally("Rogue", 10, 5, 180, 4, 0.15, "meleer");
+var allies = [knight, cleric, mage, rogue];
+
+Unit.prototype.status = function(){
+    console.log("Ally:       HP/spells/flanking/taunting/feared");
+    for(j=0;j<allies.length;j++){
+    console.log(allies[j].name + ":      " + allies[j].currentHP + "  /  " + allies[j].spellCount + "  /  " + allies[j].flank + "  /  " + allies[j].tauntStatus + "  /  " + allies[j].fearStatus);
+    };
+    console.log("");
+    console.log("Enemy:        HP / flying / bleeding");
+    console.log(dragon.name + ":  " + dragon.currentHP + "  /  " + dragon.fly + "  /  " + dragon.rendStatus);
+} //closes status method
+
+Unit.prototype.checkFlankers = function(){
+    numFlankers = allies.length;
+    for(j=0;j<allies.length;j++){
+        if(allies[j].currentHP<1||allies[j].flank==false){
+            numFlankers -= 1;
+        } //closes if
+    } //closes for
+    if(numFlankers<1){
+        numFlankers = 0;
+    } //closes if
+} //closes checkFlankers method
+
+Unit.prototype.checkFrontal = function(){
+    numFrontal = allies.length;
+    for(j=0;j<allies.length;j++){
+        if(allies[j].currentHP<1||allies[j].flank==true){
+            numFrontal -= 1;
+        } //closes if
+    } //closes for
+    if(numFrontal<1){
+        numFrontal = 0;
+    } //closes if
+} //closes checkFrontal method
+
+Unit.prototype.checkLivingAllies = function(){
+    numLivingAllies = allies.length;
+    for(j=0;j<allies.length;j++){
+        if(allies[j].currentHP<1){
+            numLivingAllies -= 1;
+        } //closes if
+    } //closes for
+    if(numLivingAllies<1){
+        numLivingAllies=0;
+    } //closes if
+} // closes checkLivingAllies method
+
+Unit.prototype.checkFearful = function(){
+    numFearful = 0;
+    for(j=0;j<allies.length;j++){
+        if(allies[j].fearStatus>0){
+            numFearful += 1;
+        } //closes if
+    } //closes for
+    if(numFearful>allies.length){
+        numFearful = allies.length;
+    } //closes if
+} //closes checkFearful method
+
+Enemy.prototype.fear = function(){
+    console.log("The " + this.name.toUpperCase() + " casts FEAR!");
+    for(n=0;n<allies.length;n++){
+        var saveCheck = Math.random();
+        if(allies[n].fearStatus<2&&allies[n].flank==false&&saveCheck>allies[n].save&&allies[n].currentHP>0){
+            allies[n].fearStatus=2;
+            console.log("Your " + allies[n].name + " is afraid!");
+        } else if(allies[n].flank==false&&saveCheck<=allies[n].save){
+            console.log("Your " + allies[n].name + " resists!");
+        } //closes if-else-if
+    } //closes for loop
+    this.turn=false;
+} //closes fear method
+
+Enemy.prototype.tailSwipe = function(){
+    var swipeDamage = Math.floor(Math.random()*3+7)*this.strength;
+    console.log("The " + this.name.toUpperCase() + " deals " + swipeDamage + " damage to all flanking Allies!");
+    for(n=0;n<allies.length;n++){
+        if(allies[n].flank==true){
+            allies[n].currentHP-=swipeDamage;
+        } //closes if
+    } //closes for
+    this.turn = false;
+} //closes tailSwipe method
+
+Enemy.prototype.breatheFire = function(){
+    var fireDamage = Math.floor(Math.random()*4+9)*this.magic;
+    console.log("The " + this.name.toUpperCase() + " deals " + fireDamage + " fire damage to all Allies!");
+    for(l=0;l<allies.length;l++){
+        allies[l].currentHP -= fireDamage;
+    } //closes cycling through Allies
+    this.turn = false;
+} //closes breatheFire method
+
+Enemy.prototype.takeFlight = function(){
+    console.log("The " + this.name.toUpperCase() + " takes flight!");
+    console.log("The " + this.name.toUpperCase() + " inhales deeply...");
+    for(l=0;l<allies.length;l++){
+        if(allies[l].flank==true){
+            allies[l].flank=false;
+        } //closes if
+    } //closes for
+    this.fly = true;
+    this.turn = false;
+} //closes fly method
+
+Enemy.prototype.wingBuffet = function(){
+    console.log("The " + this.name.toUpperCase() + " leaps out of range briefly, buffeting your allies with its powerful wings!");
+    var damage = Math.floor(Math.random()*2+2)*this.strength;
+    for(l=0;l<allies.length;l++){
+        if(allies[l].flank = true){
+            console.log("Your " + allies[l].name + " is no longer flanking!");
+        allies[l].flank = false;
+        } //closes if which flips flanking
+        allies[l].currentHP -= damage;
+        var saveCheck = Math.random();
+        if(allies[l].save<saveCheck&&allies[l].spellCount>=0.25){
+            allies[l].spellCount -= 0.25;
+            console.log("Your " + allies[l].name + " loses a quarter of a spell.");
+        }else{
+            console.log("Your " + allies[l].name + " resists!");
+        } //closes if for saveCheck
+    } //closes for which loops through allies
+    this.turn = false;
+} //closes wingBuffet method
+            
+
+Ally.prototype.beginFlank = function(target){
+    if(target.fly==false&&this.flank==false){
+        console.log("The " + this.name + " is now flanking the " + target.name + ".");
+        this.flank=true;
+        this.turn=false;
+    }else if(target.fly==false&&this.flank==true){
+        console.log("The " + this.name + " is already flanking the " + target.name + ".");
+        var unflank = prompt("Do you wish to stop flanking? 1) yes, or 2) no.");
+        if(unflank=='1'){
+            console.log("The " + this.name + " is no longer flanking.");
+            this.flank=false;
+            this.turn=false;
+        } //closes if
+    }else if(target.fly==true){
+        console.log("You cannot flank the " + target.name + " while it is flying.");
+    } //closes if-else-if-else-if
+} //closes beginFlank method
+
+Ally.prototype.rend = function(target){
+    if(target.fly==true){
+        console.log("You cannot rend the " + target.name + " while it is flying.");
+    }else{
+        this.attack(target);
+        switch(this.type){
+            case 'meleer':
+                target.rendStatus = 3;
+                console.log("The " + target.name + " is bleeding for " + target.rendStatus + " turns!");
+                this.turn=false;
+                this.spellCount -= 1;
+                break;
+            default:
+                target.rendStatus = 2;
+                console.log("The " + target.name + " is bleeding for " + target.rendStatus + " turns!");
+                this.turn=false;
+                this.spellCount -= 1;
+                break;
+        } //closes switch
+    } //closes if-else
+}//closes rend method
+
+Ally.prototype.meditate = function(){
+    if(this.spellCount==this.baseSC){
+        console.log("Your " + this.name + " already has a full spell count.");
+    }else{
+    switch(this.type){
+        case 'speller':
+            console.log("Your " + this.name + " regains a spell.");
+            this.spellCount += 1;
+            this.turn = false;
+            break;
+        case 'tanker':
+            console.log("Your " + this.name + " regains a quarter of a spell.");
+            this.spellCount +=0.25;
+            this.turn = false;
+            break;
+        default:
+            console.log("Your " + this.name + " regains half of a spell.");
+            this.spellCount += 0.5;
+            this.turn = false;
+            break;
+    } //closes switch
+    } //closes if-else
+} //closes meditate method
+
+Ally.prototype.shout = function(){
+    if(shoutUsed==true){
+        console.log("Your allies' strength is already bolstered.");
+    }else{
+        this.spellCount -=1;
+        this.turn = false;
+        shoutUsed = true;
+    switch(this.type){
+        case 'tanker':
+            for(j=0;j<allies.length;j++){
+                allies[j].strength += 4;
+            };
+            console.log("Your " + this.name + " shouts, bolstering your allies' strength by 4!");
+            break;
+        default:
+            for(j=0;j<allies.length;j++){
+                allies[j].strength += 2;
+            };
+            console.log("Your " + this.name + " shouts, bolstering your allies' strength by 2!");
+            break;
+    } //closes switch
+    } //closes if-else which checks for shout usage
+} //closes shout method
+
+knight.status();
+knight.turn=true;
+
+while(knight.turn==true||cleric.turn==true||mage.turn==true||rogue.turn==true||dragon.turn==true){
+    
+    console.log("");
+    console.log("ALLIES' turn.");
+    for(i=0;i<allies.length;i++){
+        if(allies[i].fearStatus>0){
+            console.log("Your " + allies[i].name + " cowers in fright!");
+            allies[i].fearStatus -= 1;
+            allies[i].turn = false;
+    }
+while(allies[i].turn==true&&allies[i].currentHP>0){
+    var player = prompt("It's the " + allies[i].name + "'s turn to take an action.  Choose from: 1) attack, 2) heal, 3) ice spell, 4) taunt, 5) sneak attack, 6) rend, 7) resurrect, 8) shout, q) flank, w) view status, e) meditate, or i) get more information.");
+    switch(player){
+        case '1':
+            allies[i].attack(dragon);
+            break;
+        case '2':
+            if(allies[i].spellCount>=1){
+            var target = prompt("Who do you want to heal? Choose from 1) the Knight, 2) the Cleric, 3) the Mage, or 4) the Rogue.");
+                if(target=='1'){
+                    allies[i].heal(knight);
+                }else if(target=='2'){
+                    allies[i].heal(cleric);
+                }else if(target=='3'){
+                    allies[i].heal(mage);
+                }else if(target=='4'){
+                    allies[i].heal(rogue);
+                }
+            }else{
+                console.log("The " + allies[i].name + " is out of spells.");
+            }
+            break;
+        case '3':
+            allies[i].ice(dragon);
+            break;
+        case '4':
+            if(allies[i].spellCount>=1){
+            allies[i].taunt(dragon);
+            }else{
+                console.log("The " + allies[i].name + " is out of spells.");
+            }
+            break;
+        case '5':
+            allies[i].sneakAttack(dragon);
+            break;
+        case '6':
+            if(allies[i].spellCount>=1){
+                allies[i].rend(dragon);
+            }else{
+                console.log("The " + allies[i].name + " is out of spells.");
+            }
+            break;
+        case '7':
+            if(allies[i].spellCount>=1){
+                var target = prompt("Who do you want to resurrect? Choose from 1) the Knight, 2) the Cleric, 3) the Mage, or 4) the Rogue.");
+                switch(target){
+                    case '1':
+                        if(knight.currentHP<1){
+                            allies[i].rez(knight);
+                        }else{
+                            console.log("That target is not dead.");
+                        }
+                        break;
+                    case '2':
+                        if(cleric.currentHP<1){
+                            allies[i].rez(cleric);
+                        }else{
+                            console.log("That target is not dead.");
+                        }
+                        break;
+                    case '3':
+                        if(mage.currentHP<1){
+                            allies[i].rez(mage);
+                        }else{
+                            console.log("That target is not dead.");
+                        }
+                        break;
+                    case '4':
+                        if(rogue.currentHP<1){
+                            allies[i].rez(rogue);
+                        }else{
+                            console.log("That target is not dead.");
+                        }
+                        break;
+                    default:
+                    console.log("Choose a valid target.");
+                } //closes switch
+            }else{
+                console.log("The " + allies[i].name + " is out of spells.");             
+            }; //closes spellCount check if-else
+            break;
+        case '8':
+            if(allies[i].spellCount>=1){
+                allies[i].shout();
+            }else{
+                console.log("This " + allies[i].name + " is out of spells.");
+            }; //closes spellCount check if-else
+            break;
+        case 'q':
+            allies[i].beginFlank(dragon);
+            break;
+        case 'w':
+            allies[i].status();
+            break;
+        case 'e':
+            allies[i].meditate();
+            break;
+        case 'i':
+            var info = prompt("What would you like more information on? 1) Your allies' abilities, 2) the Dragon's abilities, or 3) various statuses.");
+            if(info=='1'){
+                console.log("Your allies all have access to the same skill pool.  But each class has two skills that they perform better than all others (for instance, the Cleric is more proficient at healing and resurrecting).  Some classes are deficient using a particular skill.");
+            }else if(info=='2'){
+                console.log("The " + dragon.name + " has a number of abilities.  In addition to a normal attack, he can cast fear on all allies he faces.  To avoid this, have your ally flank him.  But beware!  He can tail swipe all flankers.  If you notice him take flight, watch out for your health....");
+            }else if(info=='3'){
+                console.log("Flanking allows an ally to move to the sides of the target.  When the Dragon is flying, normal attacks won't work, and he can't be flanked.  Taunting forces the Dragon to attack an ally on its next turn.  Fear prevents an ally from taking an action.  Bleeding results in loss of hit points over time.");
+            }
+            break;
+        default:
+        console.log("Please choose a valid action. (Type the number by the parenthesis.)");
+    } //closes switch
+    } //closes while loop in Ally turn  
+    if(i<allies.length-1){
+        allies[i+1].turn=true;
+    }
+    if(dragon.currentHP<1){
+        for(k=0;k<allies.length;k++){
+            allies[k].turn=false;
+        } //closes for loop which cancels Ally turns
+        dragon.turn=false;
+    } //closes if loop which checks for dragon death
+} //closes for loop which advances Ally turns
+
+if(dragon.currentHP<1){
+    console.log("You slayed the " + dragon.name + "!");
+} //closes if which checks for Dragon death
+
+if(dragon.currentHP>0){
+    dragon.turn=true;
+} //closes if which advances Dragon's turn
+
+dragon.checkLivingAllies();
+dragon.checkFrontal();
+dragon.checkFlankers();
+dragon.checkFearful();
+console.log("");
+console.log(dragon.name.toUpperCase() + "'s turn.");
+//this following while loop represents the dragon's turn.  It is fairly complicated because while the dragon's actions are random, it intelligently accounts for the battle state to weight his likelihood of performing a particular action.  For instance, if there are no flankers, he won't tail swipe.  If there are four flankers, he will tail swipe 75% of the time.  If there is just one flanker he will tail swipe 10% of the time.
+while(dragon.turn==true&&dragon.currentHP>0&&numLivingAllies>0){
+    if(dragon.rendStatus>0){
+        var rendDamage = Math.floor(0.05*dragon.currentHP);
+        console.log("The " + dragon.name + " bleeds for " + rendDamage + " damage.");
+        dragon.rendStatus -= 1;
+        dragon.currentHP -= rendDamage;
+    } //closes if for rend damage
+    var frontalVsLiving = numFrontal/numLivingAllies;
+    var flankingVsLiving = numFlankers/numLivingAllies;
+    var spellAction = Math.random();
+    var action = Math.random();
+    for(o=0;o<allies.length;o++){
+        if(allies[o].tauntStatus>0&&dragon.turn==true){
+            dragon.attack(allies[o]);
+            allies[o].tauntStatus -= 1;
+        } //closes if
+    } //closes for loop
+    if(dragon.fly==true&&dragon.turn==true){
+        dragon.breatheFire();
+        dragon.fly = false;
+        dragon.turn=false;
+    } //closes if
+    if(frontalVsLiving==1&&spellAction<0.7&&dragon.turn==true&&numFearful<2){
+        dragon.fear();
+    }else if(frontalVsLiving>=0.75&&spellAction<0.45&&dragon.turn==true&&numFearful<2){
+        dragon.fear();
+    }else if(frontalVsLiving>=0.5&&spellAction<0.25&&dragon.turn==true&&numFearful<2){
+        dragon.fear();
+    }else if(frontalVsLiving>=0.25&&spellAction<0.1&&dragon.turn==true&&numFearful<2){
+        dragon.fear();
+    }else if(flankingVsLiving==1&&spellAction<0.75&&dragon.turn==true){
+        dragon.tailSwipe();
+    }else if(flankingVsLiving>=0.75&&spellAction<0.55&&dragon.turn==true){
+        dragon.tailSwipe();
+    }else if(flankingVsLiving>=0.5&&spellAction<0.4&&dragon.turn==true){
+        dragon.tailSwipe();
+    }else if(flankingVsLiving>=0.25&&spellAction<0.15&&dragon.turn==true){
+        dragon.tailSwipe();
+    }else if(action<0.20&&dragon.turn==true){
+        dragon.breatheFire();        
+    }else if(action<0.35&&action>=0.20&&dragon.turn==true){
+        dragon.takeFlight();
+    }else if(action<0.48&&action>0.35&&dragon.turn==true){
+        dragon.wingBuffet();
+    } else if(action<0.61&&action>=0.48&&dragon.turn==true&&knight.currentHP>0){
+        dragon.attack(knight);
+    }else if(action<0.74&&action>=0.61&&dragon.turn==true&&cleric.currentHP>0){
+        dragon.attack(cleric);
+    }else if(action<0.87&&action>=0.74&&dragon.turn==true&&mage.currentHP>0){
+        dragon.attack(mage);
+    }else if(action<=1&&action>=0.87&&dragon.turn==true&&rogue.currentHP>0){
+        dragon.attack(rogue);
+    } //closes if-else-if-else-if...
+} //closes dragon turn while loop
+
+if(knight.currentHP>0){
+        knight.turn=true;
+    }else if(cleric.currentHP>0){
+        cleric.turn=true;
+    }else if(mage.currentHP>0){
+        mage.turn=true;
+    }else if(rogue.currentHP>0){
+        rogue.turn=true;
+    }
+if(cleric.currentHP<1&&knight.currentHP<1&&mage.currentHP<1&&rogue.currentHP<1){
+        console.log("The " + dragon.name + " devoured your party.");
+        for(m=0;m<allies.length;m++){
+            allies[m].turn=false;
+        }
+        dragon.turn=false;
+    } //closes if conditional which checks for living party members
+if(dragon.currentHP<1){
+        for(m=0;m<allies.length;m++){
+            allies[m].turn=false;
+        }
+        dragon.turn=false;
+    } //closes if conditional which checks for living dragon 
+} //closes first while loop which checks if any turn status is true
