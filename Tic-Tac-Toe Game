@@ -1,0 +1,165 @@
+var board = [['1','2','3'],['4','5','6'],['7','8','9']];
+var winner = false;
+var userTurn = true;
+var boardState = function() {
+    for (i=0; i<3; i++) {
+    console.log(board[i]);
+};
+};
+var checkTie = function(board) {
+   var checkTie = board[0][0]!='1'&&board[0][1]!='2'&&board[0][2]!='3'&&board[1][0]!='4'&&board[1][1]!='5'&&board[1][2]!='6'&&board[2][0]!='7'&&board[2][1]!='8'&&board[2][2]!='9';
+   return checkTie;
+};
+
+var checkWinner = function(board) {
+    var checkWinner = (board[0][0]==board[0][1]&&board[0][0]==board[0][2])||(board[0][0]==board[1][0]&&board[0][0]==board[2][0])||(board[0][0]==board[1][1]&&board[0][0]==board[2][2])||(board[0][1]==board[1][1]&&board[0][1]==board[2][1])||(board[2][0]==board[2][1]&&board[2][0]==board[2][2])||(board[2][0]==board[1][1]&&board[2][0]==board[0][2])||(board[0][2]==board[1][2]&&board[0][2]==board[2][2])||(board[1][0]==board[1][1]&&board[1][0]==board[1][2]);
+    return checkWinner;
+};
+
+while(winner==false) {
+boardState();
+
+while(userTurn==true) {
+var user = prompt("Enter a position to place your X");
+
+switch(user) {
+    case '1':
+    	if(board[0][0]=='1') {
+            board[0][0] = 'X';
+            userTurn=false;
+            break;
+        } else {
+            console.log("Please choose another position.");
+            break;
+        };
+    case '2':
+        if(board[0][1]=='2') {
+            board[0][1] = 'X';
+            userTurn=false;
+            break;
+        } else {
+            console.log("Please choose another position.");
+            break;
+        };
+    case '3':
+        if(board[0][2]=='3') {
+            board[0][2] = 'X';
+            userTurn=false;
+            break;
+        } else {
+            console.log("Please choose another position.");
+            break;
+        };
+    case '4':
+        if(board[1][0]=='4') {
+            board[1][0] = 'X';
+            userTurn=false;
+            break;
+        } else {
+            console.log("Please choose another position.");
+            break;
+        };
+    case '5':
+        if(board[1][1]=='5') {
+            board[1][1] = 'X';
+            userTurn=false;
+            break;
+        } else {
+            console.log("Please choose another position.");
+            break;
+        };
+    case '6':
+        if(board[1][2]=='6') {
+            board[1][2] = 'X';
+            userTurn=false;
+            break;
+        } else {
+            console.log("Please choose another position.");
+            break;
+        };
+    case '7':
+        if(board[2][0]=='7') {
+            board[2][0] = 'X';
+            userTurn=false;
+            break;
+        } else {
+            console.log("Please choose another position.");
+            break;
+        };
+    case '8':
+        if(board[2][1]=='8') {
+            board[2][1] = 'X';
+            userTurn=false;
+            break;
+        } else {
+            console.log("Please choose another position.");
+            break;
+        };
+    case '9':
+        if(board[2][2]=='9') {
+            board[2][2] = 'X';
+            userTurn=false;
+            break;
+        } else {
+            console.log("Please choose another position.");
+            break;
+        };
+    default:
+        console.log("Please choose a valid position.");
+};
+
+};
+
+if(checkTie(board)||checkWinner(board)) {
+    winner = true;
+} else {
+    compTurn = false;
+};
+while(userTurn==false&&winner==false) {
+    var random = Math.random();
+if(random<=0.111&&board[0][0]=='1') {
+    board[0][0] = 'O';
+    userTurn = true;
+} else if(random>0.111&&random<=0.222&&board[0][1]=='2') {
+    board[0][1] = 'O';
+    userTurn = true;
+} else if(random>0.222&&random<=0.333&&board[0][2]=='3') {
+    board[0][2] = 'O';
+    userTurn = true;
+} else if(random>0.333&&random<=0.444&&board[1][0]=='4') {
+    board[1][0] = 'O';
+    userTurn = true;
+} else if(random>0.444&&random<=0.555&&board[1][1]=='5') {
+    board[1][1] = 'O';
+    userTurn = true;
+} else if(random>0.555&&random<=0.666&&board[1][2]=='6') {
+    board[1][2] = 'O';
+    userTurn = true;
+} else if(random>0.666&&random<=0.777&&board[2][0]=='7') {
+    board[2][0] = 'O';
+    userTurn = true;
+} else if(random>0.777&&random<=0.888&&board[2][1]=='8') {
+    board[2][1] = 'O';
+    userTurn = true;
+} else if(random>0.888&&board[2][2]=='9') {
+    board[2][2] = 'O';
+    userTurn = true;
+};
+};
+    
+if(checkWinner(board)&&userTurn==false) {
+    winner = true;
+    console.log("You Won!");
+    boardState();
+} else if(checkWinner(board)&&userTurn==true) {
+    winner = true;
+    console.log("The Computer Won.");
+    boardState();
+} else if(checkTie(board)) {
+    winner = true;
+    console.log("It's a tie.");
+    boardState();
+} else {
+    console.log("Next turn");
+};
+};
