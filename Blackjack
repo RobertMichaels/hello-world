@@ -1,10 +1,15 @@
+hello-world/Blackjack
 var cardsDrawn = [];
-var value = 0;
+var dealerValueLow = 0;
+var dealerValueHigh = 0;
+var playerValueLow = 0;
+var playerValueHigh = 0;
 
 function Card(){
     this.name = false;
     this.type = false;
     this.value = false;
+    this.owner = false;
 } //closes Card object
 
 Card.prototype.pickValue = function(){
@@ -74,64 +79,113 @@ Card.prototype.checkDrawn = function(cardsDrawn,name,type){
     return prevDrawn;
 } //closes checkDrawn method
 
-var newCard = function(){
+var newCard = function(owner, hole){
     var card = new Card();
+    var hole = hole;
     card.pickSuit();
     card.pickValue();
+    if(owner=="player"){
+        card.owner = "player";
+    }else if(owner=="dealer"){
+        card.owner = "dealer";
+    } //closes if-else-if
     //console.log(card.name);
     if(card.checkDrawn(cardsDrawn,card.name,card.type)
-    ==false){
-        console.log("You drew a " + card.name + " of " + card.type + ".");
+    ==false && hole == false){
+        console.log("The " + card.owner + " drew a " + card.name + " of " + card.type + ".");
+        cardsDrawn[cardsDrawn.length] = card;
+    }else if(card.checkDrawn(cardsDrawn,card.name,card.type)==false && hole == true){
+        console.log("The dealer drew a hole card.");
         cardsDrawn[cardsDrawn.length] = card;
     }else{
-        newCard();
-    } //closes if-else
+        newCard(owner,hole);
+    } //closes if-else-if-else
 } //closes newCard function
 
-newCard();
-newCard();
-console.log(cardsDrawn);
-
 var calcValue = function(){
-    value = 0;
+    dealerValueLow = 0;
+    dealerValueHigh = 0;
+    playerValueLow = 0;
+    playerValueHigh = 0;
     for(i=0;i<cardsDrawn.length;i++){
         if(cardsDrawn[i].name == "Ace"){
-            var valueChosen = false;
-            while(valueChosen == false){
-                var aceValue = prompt("Would you like your Ace to be worth 1 or 11?");
-                if(aceValue == "1"){
-                    cardsDrawn[i].value = 1;
-                    valueChosen = true;
-                }else if(aceValue == "11"){
-                    cardsDrawn[i].value = 11;
-                    valueChosen = true;
-                }else{
-                    console.log("Please type a valid value for your Ace.");
-                } //closes if-else-if-else
-            } //closes while
+            cardsDrawn[i].value = 1;
         } //closes if which checks for Aces
-        value = value + cardsDrawn[i].value;
+        if(cardsDrawn[i].owner == "player"){
+            playerValueLow = playerValueLow + cardsDrawn[i].value;
+        }else if(cardsDrawn[i].owner == "dealer"){
+            dealerValueLow = dealerValueLow + cardsDrawn[i].value;
+        } //closes if-else-if
+    } //closes for
+    for(i=0;i<cardsDrawn.length;i++){
+        if(cardsDrawn[i].name == "Ace"){
+            cardsDrawn[i].value = 11;
+        } //closes if which checks for Aces
+        if(cardsDrawn[i].owner == "player"){
+            playerValueHigh = playerValueHigh +cardsDrawn[i].value;
+        } else if(cardsDrawn[i].owner == "dealer"){
+            dealerValueHigh = dealerValueHigh + cardsDrawn[i].value;
+        } //closes if which assigns high value
     } //closes for
 } //closes calcValue function
 
+newCard("player", false);
+newCard("dealer", false); //change this back to true to hide the hole card
+newCard("player", false);
+newCard("dealer", false);
 calcValue();
-console.log(value);
 
-var gameComplete = false;
+var dealerGameComplete = false;
+var playerGameComplete = false;
+var playerDrawComplete = false;
 
-while(gameComplete==false&&value<21){
-    var draw = prompt("Pick one:  1) Hit, or 2) Stay.");
-    if(draw == "1"){
-        newCard();
-        console.log(cardsDrawn);
-        calcValue();
-        console.log(value);
-    }else if(draw == "2"){
-        gameComplete = true;
-    }else{
+while(playerGameComplete==false||dealerGameComplete==false){
+    playerDrawComplete = false;
+    while(playerGameComplete == false&&playerDrawComplete == false&&playerValueLow<21&&playerValueHigh!=21){
+        var draw = prompt("Pick one:  1) Hit, or 2) Stay.");
+        if(draw == "1"){
+            newCard("player", false);
+            playerDrawComplete = true;
+        }else if(draw == "2"){
+            playerDrawComplete = true;
+            playerGameComplete = true;
+        }else{
         console.log("Please choose a valid option.");
-    } //closes if-else-if-else
+        } //closes if-else-if-else
+    } //closes while loop
+    calcValue();
+    if(playerValueLow>=21){
+        playerGameComplete = true;
+    }else if(playerValueHigh ==21){
+        playerGameComplete = true;
+    } //closes if-else-if
+    if(dealerValueHigh==21){
+        dealerGameComplete = true;
+    }else if(dealerValueLow==21){
+        dealerGameComplete = true;
+    }else if(playerValueLow>21){
+        dealerGameComplete = true;
+    }else if(dealerValueHigh<playerValueHigh&&playerValueHigh<=21){
+        newCard("dealer",false);
+    }else if(dealerValueHigh<playerValueLow&&playerValueLow<=21){
+        newCard("dealer",false);
+    }else if(dealerValueLow<playerValueHigh&&playerValueHigh<=21){
+        newCard("dealer",false);
+    }else if(dealerValueLow<playerValueLow&&playerValueLow<=21){
+        newCard("dealer",false);
+    } //closes if-else-if-else-if...
+    calcValue();
+    if(dealerValueLow>playerValueLow&&dealerValueLow>playerValueHigh){
+        dealerGameComplete = true;
+    }else if(dealerValueHigh>playerValueHigh&&dealerValueHigh<=21){
+        dealerGameComplete = true;
+    } //close if-else-if
 } //closes while loop
 
+console.log("The player's low value is: " + playerValueLow);
+console.log("The player's high value is: " + playerValueHigh);
 
-// dealer draw not yet implemented. 
+console.log("The dealer's low value is: " + dealerValueLow);
+console.log("The dealer's high value is: " + dealerValueHigh);
+
+//dealers win conditions not being properly evaluated
