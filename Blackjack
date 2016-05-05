@@ -131,7 +131,7 @@ var calcValue = function(){
 } //closes calcValue function
 
 newCard("player", false);
-newCard("dealer", false); //change this back to true to hide the hole card
+newCard("dealer", true); //change this back to true to hide the hole card
 newCard("player", false);
 newCard("dealer", false);
 
@@ -194,7 +194,7 @@ if(dealerValueHigh<=21){
 }else{
     dealerValue = dealerValueLow;
 }
-
+console.log("The dealer's hole card is a " + cardsDrawn[1].name + " of " + cardsDrawn[1].type + ".");
 console.log("The player's value is: " + playerValue);
 console.log("The dealer's value is: " + dealerValue);
 
