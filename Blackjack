@@ -1,9 +1,10 @@
-hello-world/Blackjack
 var cardsDrawn = [];
 var dealerValueLow = 0;
 var dealerValueHigh = 0;
 var playerValueLow = 0;
 var playerValueHigh = 0;
+var dealerValue = 0;
+var playerValue = 0;
 
 function Card(){
     this.name = false;
@@ -133,15 +134,19 @@ newCard("player", false);
 newCard("dealer", false); //change this back to true to hide the hole card
 newCard("player", false);
 newCard("dealer", false);
-calcValue();
 
 var dealerGameComplete = false;
 var playerGameComplete = false;
 var playerDrawComplete = false;
 
 while(playerGameComplete==false||dealerGameComplete==false){
+    dealerGameComplete = false;
     playerDrawComplete = false;
-    while(playerGameComplete == false&&playerDrawComplete == false&&playerValueLow<21&&playerValueHigh!=21){
+    calcValue();
+    if(playerValueHigh == 21||playerValueLow>=21){
+        playerGameComplete = true;
+    } //closes if
+    while(playerGameComplete == false&&playerDrawComplete == false){
         var draw = prompt("Pick one:  1) Hit, or 2) Stay.");
         if(draw == "1"){
             newCard("player", false);
@@ -154,38 +159,55 @@ while(playerGameComplete==false||dealerGameComplete==false){
         } //closes if-else-if-else
     } //closes while loop
     calcValue();
-    if(playerValueLow>=21){
-        playerGameComplete = true;
-    }else if(playerValueHigh ==21){
-        playerGameComplete = true;
-    } //closes if-else-if
-    if(dealerValueHigh==21){
+    if(playerValueLow>21){
         dealerGameComplete = true;
-    }else if(dealerValueLow==21){
+    }else if(dealerValueHigh == 21||dealerValueLow>=21){
         dealerGameComplete = true;
-    }else if(playerValueLow>21){
+    }else if(dealerValueHigh>=playerValueHigh&&dealerValueHigh<=21){
         dealerGameComplete = true;
-    }else if(dealerValueHigh<playerValueHigh&&playerValueHigh<=21){
+    }else if(dealerValueLow>playerValueHigh&&dealerValueLow<=21){
+        dealerGameComplete = true;
+    }else if(dealerValueLow>=playerValueLow&&dealerValueLow<=21&&dealerValueLow>=playerValueHigh){
+        dealerGameComplete = true;
+    }else{
+        dealerGameComplete = false;
+    } //closes if-else-if-else-if...
+    if(dealerValueHigh<playerValueHigh&&playerValueHigh<=21&&dealerGameComplete==false){
         newCard("dealer",false);
-    }else if(dealerValueHigh<playerValueLow&&playerValueLow<=21){
+    }else if(dealerValueHigh<playerValueLow&&playerValueLow<=21&&dealerGameComplete == false){
         newCard("dealer",false);
-    }else if(dealerValueLow<playerValueHigh&&playerValueHigh<=21){
+    }else if(dealerValueLow<playerValueHigh&&playerValueHigh<=21&&dealerGameComplete == false){
         newCard("dealer",false);
-    }else if(dealerValueLow<playerValueLow&&playerValueLow<=21){
+    }else if(dealerValueLow<playerValueLow&&playerValueLow<=21&&dealerGameComplete == false){
         newCard("dealer",false);
     } //closes if-else-if-else-if...
-    calcValue();
-    if(dealerValueLow>playerValueLow&&dealerValueLow>playerValueHigh){
-        dealerGameComplete = true;
-    }else if(dealerValueHigh>playerValueHigh&&dealerValueHigh<=21){
-        dealerGameComplete = true;
-    } //close if-else-if
 } //closes while loop
 
-console.log("The player's low value is: " + playerValueLow);
-console.log("The player's high value is: " + playerValueHigh);
+calcValue();
+if(playerValueHigh<=21){
+    playerValue = playerValueHigh;
+}else{
+    playerValue = playerValueLow;
+}
+if(dealerValueHigh<=21){
+    dealerValue = dealerValueHigh;
+}else{
+    dealerValue = dealerValueLow;
+}
 
-console.log("The dealer's low value is: " + dealerValueLow);
-console.log("The dealer's high value is: " + dealerValueHigh);
+console.log("The player's value is: " + playerValue);
+console.log("The dealer's value is: " + dealerValue);
 
-//dealers win conditions not being properly evaluated
+if(dealerValue>21&&playerValue>21){
+    console.log("No one wins.");
+}else if(dealerValue>21){
+    console.log("The player wins.");
+}else if(playerValue>21){
+    console.log("The dealer wins.");
+}else if(dealerValue==playerValue){
+    console.log("It is a tie.");
+}else if(dealerValue>playerValue){
+    console.log("The dealer wins.");
+}else if(dealerValue<playerValue){
+    console.log("The player wins!");
+} //closes if-else-if-else-if...
